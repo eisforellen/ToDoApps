@@ -32,12 +32,44 @@ class ViewController: UICollectionViewController, UICollectionViewDelegateFlowLa
         let taskCell = collectionView.dequeueReusableCellWithReuseIdentifier("cellId", forIndexPath: indexPath) as! TaskCell
         taskCell.nameLabel.text = tasks[indexPath.item]
         
-        let cSelector = #selector(ViewController.reset(_:))
-        let RightSwipe = UISwipeGestureRecognizer(target: self, action: cSelector)
-        RightSwipe.direction = UISwipeGestureRecognizerDirection.Right
-        taskCell.addGestureRecognizer(RightSwipe)
+        let cellSwipeRightSelector = #selector(ViewController.reset(_:))
+        let rightSwipe = UISwipeGestureRecognizer(target: self, action: cellSwipeRightSelector)
+        rightSwipe.direction = UISwipeGestureRecognizerDirection.Right
+        taskCell.addGestureRecognizer(rightSwipe)
+        
+        let cellSwipeLeftSelector = #selector(ViewController.edit(_:))
+        let leftSwipe = UISwipeGestureRecognizer(target: self, action: cellSwipeLeftSelector)
+        leftSwipe.direction = UISwipeGestureRecognizerDirection.Left
+        taskCell.addGestureRecognizer(leftSwipe)
+        
         
         return taskCell
+    }
+    
+    func edit(sender: UISwipeGestureRecognizer) {
+        let cell = sender.view as! TaskCell
+        let index = collectionView?.indexPathForCell(cell)!.item
+        
+        let editAlert = UIAlertController(title: "Edit Task", message: "Update your task below", preferredStyle: .Alert)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .Cancel, handler: nil)
+        
+        let editAction = UIAlertAction(title: "Save", style: .Default) {(_) in
+            let updateTaskField = editAlert.textFields![0] as UITextField
+
+            self.tasks[index!] = updateTaskField.text!
+            self.collectionView?.reloadData()
+
+        }
+        
+        editAlert.addTextFieldWithConfigurationHandler{(textField) -> Void in
+            textField.placeholder = cell.nameLabel.text
+        }
+        
+        editAlert.addAction(cancelAction)
+        editAlert.addAction(editAction)
+        self.presentViewController(editAlert, animated: true, completion: nil)
+        
+        collectionView?.reloadData()
     }
     
     func reset(sender: UISwipeGestureRecognizer) {
@@ -134,8 +166,12 @@ class TaskHeader: BaseCell {
     }
     
     func addTask() {
-        viewController?.addNewTask(taskNameTextField.text!)
-        taskNameTextField.text = ""
+        if taskNameTextField.text != "" {
+            viewController?.addNewTask(taskNameTextField.text!)
+            taskNameTextField.text = ""
+        } else {
+            print("Nothing added")
+        }
     }
 }
 
